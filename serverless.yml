@@ -1,0 +1,41 @@
+service: integ-admin-cron-update-billing
+
+provider:
+    name: aws
+    region: us-west-2
+    runtime: provided.al2
+    profile: gsati
+    iam:
+        role:
+            statements:
+                -   Effect: Allow
+                    Action:
+                        - dynamodb:*
+                    Resource:
+                        - arn:aws:dynamodb:us-west-2:655957386383:table/*
+                -   Effect: Allow
+                    Action:
+                        - logs:*
+                    Resource:
+                        - arn:aws:logs:us-west-2:655957386383:*
+
+plugins:
+    - ./vendor/bref/bref
+
+functions:
+    cron:
+        handler: index.php
+        description: 'Integrations, Admin, Cron, Update Request with billing data'
+        timeout: 900
+        layers:
+            - ${bref:layer.php-81}
+            - ${bref:layer.console}
+        events:
+            -   schedule:
+                    enabled: false
+                    rate: cron(0/15 * * * ? *)
+
+# Exclude files from deployment
+package:
+    patterns:
+        - '!tests/**'
